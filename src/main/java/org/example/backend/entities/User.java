@@ -3,16 +3,12 @@ package org.example.backend.entities;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.*;
-import jakarta.persistence.ManyToMany;
 import jakarta.transaction.Transactional;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-import java.util.List;
-
-@Data
+@Getter
+@Setter
+@ToString
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
@@ -23,7 +19,9 @@ public class User {
     private String username;
     private String password;
     private String email;
-    @ManyToMany(fetch = FetchType.EAGER)
-    private List<Role> roles ;
+    @ManyToOne
+    private Role role;
 
+    // Getters and setters
+    // ...existing code...
 }
