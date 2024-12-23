@@ -8,7 +8,7 @@ import lombok.*;
 
 @Getter
 @Setter
-@ToString
+@ToString(exclude = "role")
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
@@ -22,6 +22,4 @@ public class User {
     @ManyToOne
     private Role role;
 
-    // Getters and setters
-    // ...existing code...
 }

@@ -39,6 +39,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(
                         requests -> requests
                                 .requestMatchers("/api/auth/register").permitAll()
+                                .requestMatchers("/api/auth/login").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/users/all").hasAuthority("ADMIN")
                                 .requestMatchers(HttpMethod.GET, "/api.products/all").hasAnyAuthority("ADMIN", "CASHIER", "USER")
                                 .requestMatchers(HttpMethod.GET, "/api/products/**").hasAnyAuthority("ADMIN", "CASHIER", "USER")
@@ -48,7 +49,8 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.DELETE, "/api/products/delete/**").hasAuthority("ADMIN")
                                 .requestMatchers(HttpMethod.PUT, "/api.products/update").hasAuthority("ADMIN")
                                 .anyRequest().authenticated()
-                )
+                ).formLogin(form -> form.defaultSuccessUrl("/").permitAll()).
+                logout(logout -> logout.permitAll())
                 .addFilterBefore(new JWTAuthenticationFilter(authenticationManager), UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(new JWTAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class);
         return httpSecurity.build();

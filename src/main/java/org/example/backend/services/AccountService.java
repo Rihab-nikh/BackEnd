@@ -1,15 +1,21 @@
 package org.example.backend.services;
 
+import java.util.Date;
+
 import org.example.backend.dtos.UserRegister;
 import org.example.backend.entities.Role;
 import org.example.backend.entities.User;
 import org.example.backend.repositories.RoleRepository;
 import org.example.backend.repositories.UserRepository;
+import org.example.backend.security.SecurityParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureAlgorithm;
 
 @Service
 public class AccountService {
@@ -41,6 +47,25 @@ public class AccountService {
         logger.info("User registered successfully: {}", user);
     }
 
+    public String loginUser(String username, String password) {
+        User user = userRepository.findByUsername(username);
+        if (user != null && bCryptPasswordEncoder.matches(password, user.getPassword())) {
+            // Generate JWT token
+            return generateToken(user);
+        }
+        return null;
+    }
+
+    private String generateToken(User user) {
+        return Jwts.builder()
+                .setSubject(user.getUsername())
+                .claim("roles", user.getRole().getRoleName())
+                .setIssuedAt(new Date())
+                .setExpiration(new Date(System.currentTimeMillis() + SecurityParameters.EXPIRATION_TIME)) // 3 days
+                .signWith(SignatureAlgorithm.HS256, SecurityParameters.SECRET)
+                .compact();
+    }
+
     private User convertToUser(UserRegister userRegister) {
         User user = new User();
         user.setUsername(userRegister.getUsername());
@@ -58,7 +83,7 @@ public class AccountService {
 
     public User findUserByUsername(String username) {
         logger.info("Finding user by username: {}", username);
-        return userRepository.findById(username).orElse(null);
+        return userRepository.findByUsername(username);
     }
 
     private UserRegister convertToUserRegister(User user) {

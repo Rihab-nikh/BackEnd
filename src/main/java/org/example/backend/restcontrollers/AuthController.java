@@ -1,14 +1,14 @@
 package org.example.backend.restcontrollers;
 
 import org.example.backend.dtos.UserRegister;
-import org.example.backend.entities.Role;
+import org.example.backend.dtos.UserLogin;
 import org.example.backend.services.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -19,39 +19,61 @@ public class AuthController {
     private AccountService accountService;
 
     @PostMapping("/register")
-    public String registerUser(@RequestBody UserRegister user) {
+    public ResponseEntity<Map<String, String>> registerUser(@RequestBody UserRegister user) {
         System.out.println("Registering user: " + user);
+        Map<String, String> response = new HashMap<>();
         try {
             if (user.getUsername() == null || user.getUsername().trim().isEmpty()) {
                 System.out.println("Username is required");
-                return "Username is required";
+                response.put("message", "Username is required");
+                return ResponseEntity.badRequest().body(response);
             }
             if (user.getEmail() == null || user.getEmail().trim().isEmpty()) {
                 System.out.println("Email is required");
-                return "Email is required";
+                response.put("message", "Email is required");
+                return ResponseEntity.badRequest().body(response);
             }
             if (user.getPassword() == null || user.getPassword().trim().isEmpty()) {
                 System.out.println("Password is required");
-                return "Password is required";
+                response.put("message", "Password is required");
+                return ResponseEntity.badRequest().body(response);
             }
-
-            System.out.println("Fetching role ORDINARY...");
-            Role role = accountService.findRoleByRoleName("ORDINARY");
-            if (role == null) {
-                System.out.println("Role ORDINARY not found, creating it...");
-                role = new Role("ORDINARY");
-                accountService.saveRole(role);
-                System.out.println("Role ORDINARY created successfully.");
+            if (accountService.findUserByUsername(user.getUsername()) != null) {
+                System.out.println("Username already exists");
+                response.put("message", "Username already exists");
+                return ResponseEntity.badRequest().body(response);
             }
             user.setRoleName("ORDINARY");
             System.out.println("Saving user...");
             accountService.registerUser(user);
             System.out.println("User registered successfully.");
-            return "User registered successfully";
+            response.put("message", "User registered successfully");
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("Registration failed: " + e.getMessage());
-            return "Registration failed: " + e.getMessage();
+            response.put("message", "Registration failed: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
+        }
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<Map<String, String>> loginUser(@RequestBody UserLogin userLogin) {
+        System.out.println("Logging in user: " + userLogin);
+        Map<String, String> response = new HashMap<>();
+        try {
+            String token = accountService.loginUser(userLogin.getUsername(), userLogin.getPassword());
+            if (token == null) {
+                response.put("message", "Invalid username or password");
+                return ResponseEntity.badRequest().body(response);
+            }
+            response.put("token", token);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Login failed: " + e.getMessage());
+            response.put("message", "Login failed: " + e.getMessage());
+            return ResponseEntity.status(500).body(response);
         }
     }
 }
