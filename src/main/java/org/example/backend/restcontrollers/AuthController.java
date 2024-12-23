@@ -1,7 +1,7 @@
 package org.example.backend.restcontrollers;
 
-import org.example.backend.dtos.UserRegister;
 import org.example.backend.dtos.UserLogin;
+import org.example.backend.dtos.UserRegister;
 import org.example.backend.services.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
